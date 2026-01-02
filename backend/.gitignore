@@ -1,5 +1,5 @@
 # Environment
-.env
+
 
 
 # Python
@@ -10,7 +10,7 @@ __pycache__/
 
 # Virtual Environment
 venv/
-env/
+
 .venv/
 
 # Database
