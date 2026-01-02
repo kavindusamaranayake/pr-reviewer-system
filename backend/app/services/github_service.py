@@ -16,7 +16,7 @@ class GitHubService:
         """Post a review comment to a PR"""
         try:
             repo = self.github.get_repo(repo_full_name)
-            pr = repo.get_pull_request(pr_number)
+            pr = repo.get_pull(pr_number)  # ← CHANGED: get_pull_request() to get_pull()
             
             # Post as a review comment
             pr.create_issue_comment(comment_body)
@@ -29,5 +29,5 @@ class GitHubService:
     def get_pr_info(self, repo_full_name: str, pr_number: int):
         """Get PR information"""
         repo = self.github.get_repo(repo_full_name)
-        pr = repo.get_pull_request(pr_number)
+        pr = repo.get_pull(pr_number)  # ← CHANGED: get_pull_request() to get_pull()
         return pr

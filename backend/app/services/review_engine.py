@@ -17,7 +17,7 @@ class ReviewEngine:
         Analyze a PR and generate structured feedback
         """
         repo = self.github.get_repo(repo_full_name)
-        pr = repo.get_pull_request(pr_number)
+        pr = repo.get_pull(pr_number)  # ← CHANGED: get_pull_request() to get_pull()
         
         feedback_items = []
         
@@ -192,7 +192,7 @@ class ReviewEngine:
             summary_parts.append("### 🔴 Critical Issues")
             for item in feedback_items:
                 if item["severity"] == "error":
-                    file_info = f" ({item['file_path']})" if item['file_path'] else ""
+                    file_info = f" ({item['file_path']})" if item.get('file_path') else ""
                     summary_parts.append(f"- {item['message']}{file_info}")
             summary_parts.append("")
         
@@ -200,7 +200,7 @@ class ReviewEngine:
             summary_parts.append("### ⚠️ Warnings")
             for item in feedback_items:
                 if item["severity"] == "warning":
-                    file_info = f" ({item['file_path']})" if item['file_path'] else ""
+                    file_info = f" ({item['file_path']})" if item.get('file_path') else ""
                     summary_parts.append(f"- {item['message']}{file_info}")
             summary_parts.append("")
         
