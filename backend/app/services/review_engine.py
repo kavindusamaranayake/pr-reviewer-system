@@ -182,7 +182,7 @@ class ReviewEngine:
             f"Branch Type: {expectations.get('branch_type', 'default')}",
             f"Files Changed: {pr.changed_files}",
             f"Lines Added: +{pr.additions} / Lines Removed: -{pr.deletions}\n",
-            f"### Review Results",
+            f"Review Results",
             f"- ❌ Errors: {error_count}",
             f"- ⚠️ Warnings: {warning_count}",
             f"- ℹ️ Info: {len(feedback_items) - error_count - warning_count}\n",
