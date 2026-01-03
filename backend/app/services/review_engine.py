@@ -177,19 +177,19 @@ class ReviewEngine:
         """Generate a human-readable summary"""
         
         summary_parts = [
-            f"## Automated PR Review Summary\n",
-            f"**PR:** {pr.title}",
-            f"**Branch Type:** {expectations.get('branch_type', 'default')}",
-            f"**Files Changed:** {pr.changed_files}",
-            f"**Lines Added:** +{pr.additions} / **Lines Removed:** -{pr.deletions}\n",
+            f"Automated PR Review Summary\n",
+            f"PR: {pr.title}",
+            f"Branch Type: {expectations.get('branch_type', 'default')}",
+            f"Files Changed: {pr.changed_files}",
+            f"Lines Added: +{pr.additions} / Lines Removed: -{pr.deletions}\n",
             f"### Review Results",
-            f"- ❌ **Errors:** {error_count}",
-            f"- ⚠️  **Warnings:** {warning_count}",
-            f"- ℹ️  **Info:** {len(feedback_items) - error_count - warning_count}\n",
+            f"- ❌ Errors: {error_count}",
+            f"- ⚠️ Warnings: {warning_count}",
+            f"- ℹ️ Info: {len(feedback_items) - error_count - warning_count}\n",
         ]
         
         if error_count > 0:
-            summary_parts.append("### 🔴 Critical Issues")
+            summary_parts.append(" 🔴 Critical Issues")
             for item in feedback_items:
                 if item["severity"] == "error":
                     file_info = f" ({item['file_path']})" if item.get('file_path') else ""
@@ -197,19 +197,19 @@ class ReviewEngine:
             summary_parts.append("")
         
         if warning_count > 0:
-            summary_parts.append("### ⚠️ Warnings")
+            summary_parts.append(" ⚠️ Warnings")
             for item in feedback_items:
                 if item["severity"] == "warning":
                     file_info = f" ({item['file_path']})" if item.get('file_path') else ""
                     summary_parts.append(f"- {item['message']}{file_info}")
             summary_parts.append("")
         
-        summary_parts.append("### 📋 Branch-Specific Requirements")
+        summary_parts.append(" 📋 Branch-Specific Requirements")
         summary_parts.append(f"_{expectations.get('description', 'Default requirements')}_\n")
         
         if error_count == 0:
-            summary_parts.append("✅ **This PR is ready for instructor review!**")
+            summary_parts.append("✅ This PR is ready for instructor review!")
         else:
-            summary_parts.append("⏸️ **Please address the errors before instructor review.**")
+            summary_parts.append("⏸️ Please address the errors before instructor review.")
         
         return "\n".join(summary_parts)
