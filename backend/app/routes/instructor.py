@@ -30,18 +30,14 @@ def instructor_decision(
             detail=f"Review is not pending (current status: {review.status})"
         )
     
-    github_service = GitHubService(settings.github_token)
-    
     if decision.decision == "approve":
         # Post the review to GitHub
+        github_service = GitHubService(settings.github_token)
+        
         comment_body = review.review_summary
         
         if decision.notes:
             comment_body += f"\n\n---\n**Instructor Notes:**\n{decision.notes}"
-        
-        # Add merge status to comment
-        if decision.auto_merge:
-            comment_body += f"\n\n---\n🤖 **Auto-merge enabled** - This PR will be merged automatically if all checks pass."
         
         success = github_service.post_review_comment(
             review.repo_full_name,
@@ -50,74 +46,20 @@ def instructor_decision(
             review.commit_sha
         )
         
-        if not success:
+        if success:
+            review.status = ReviewStatus.POSTED
+            review.posted_at = datetime.utcnow()
+        else:
             raise HTTPException(status_code=500, detail="Failed to post to GitHub")
-        
-        review.status = ReviewStatus.POSTED
-        review.posted_at = datetime.utcnow()
-        
-        # Auto-merge if requested
-        merge_result = {"success": False, "message": "Auto-merge not requested"}
-        
-        if decision.auto_merge:
-            # Check PR status first
-            pr_status = github_service.check_pr_status(
-                review.repo_full_name,
-                review.pr_number
-            )
-            
-            if pr_status.get("can_merge", False):
-                # Merge the PR
-                merge_message = f"Auto-merged by instructor after review approval\n\n{decision.notes or ''}"
-                merge_result = github_service.merge_pull_request(
-                    review.repo_full_name,
-                    review.pr_number,
-                    commit_message=merge_message,
-                    merge_method="merge"  # or "squash" or "rebase"
-                )
-                
-                if merge_result["success"]:
-                    # Post success comment
-                    github_service.post_review_comment(
-                        review.repo_full_name,
-                        review.pr_number,
-                        "✅ **PR has been automatically merged by instructor**",
-                        review.commit_sha
-                    )
-            else:
-                # Cannot merge - post explanation
-                reason = "unknown reason"
-                if not pr_status.get("mergeable"):
-                    reason = "merge conflicts"
-                elif pr_status.get("status_checks", {}).get("state") != "success":
-                    reason = "status checks not passing"
-                
-                github_service.post_review_comment(
-                    review.repo_full_name,
-                    review.pr_number,
-                    f"⚠️ **Auto-merge failed**: PR cannot be merged due to {reason}. Please resolve and merge manually.",
-                    review.commit_sha
-                )
-                merge_result = {
-                    "success": False,
-                    "message": f"Cannot merge: {reason}"
-                }
     
     elif decision.decision == "reject":
         review.status = ReviewStatus.REJECTED
-        merge_result = {"success": False, "message": "Review rejected"}
     
     else:
         raise HTTPException(status_code=400, detail="Invalid decision")
     
     review.instructor_notes = decision.notes
     review.reviewed_at = datetime.utcnow()
-    
-    # Store merge result if auto-merge was attempted
-    if decision.auto_merge and decision.decision == "approve":
-        if not review.instructor_notes:
-            review.instructor_notes = ""
-        review.instructor_notes += f"\n\nAuto-merge result: {merge_result['message']}"
     
     db.commit()
     db.refresh(review)
@@ -139,27 +81,6 @@ def get_stats(db: Session = Depends(get_db)):
         "approved": approved,
         "rejected": rejected
     }
-
-@router.get("/reviews/{review_id}/pr-status")
-def get_pr_merge_status(
-    review_id: int,
-    db: Session = Depends(get_db)
-):
-    """Check if PR can be merged"""
-    
-    review = db.query(PRReview).filter(PRReview.id == review_id).first()
-    
-    if not review:
-        raise HTTPException(status_code=404, detail="Review not found")
-    
-    github_service = GitHubService(settings.github_token)
-    pr_status = github_service.check_pr_status(
-        review.repo_full_name,
-        review.pr_number
-    )
-    
-    return pr_status
-
 
 
 
@@ -195,14 +116,18 @@ def get_pr_merge_status(
 #             detail=f"Review is not pending (current status: {review.status})"
 #         )
     
+#     github_service = GitHubService(settings.github_token)
+    
 #     if decision.decision == "approve":
 #         # Post the review to GitHub
-#         github_service = GitHubService(settings.github_token)
-        
 #         comment_body = review.review_summary
         
 #         if decision.notes:
 #             comment_body += f"\n\n---\n**Instructor Notes:**\n{decision.notes}"
+        
+#         # Add merge status to comment
+#         if decision.auto_merge:
+#             comment_body += f"\n\n---\n🤖 **Auto-merge enabled** - This PR will be merged automatically if all checks pass."
         
 #         success = github_service.post_review_comment(
 #             review.repo_full_name,
@@ -211,20 +136,74 @@ def get_pr_merge_status(
 #             review.commit_sha
 #         )
         
-#         if success:
-#             review.status = ReviewStatus.POSTED
-#             review.posted_at = datetime.utcnow()
-#         else:
+#         if not success:
 #             raise HTTPException(status_code=500, detail="Failed to post to GitHub")
+        
+#         review.status = ReviewStatus.POSTED
+#         review.posted_at = datetime.utcnow()
+        
+#         # Auto-merge if requested
+#         merge_result = {"success": False, "message": "Auto-merge not requested"}
+        
+#         if decision.auto_merge:
+#             # Check PR status first
+#             pr_status = github_service.check_pr_status(
+#                 review.repo_full_name,
+#                 review.pr_number
+#             )
+            
+#             if pr_status.get("can_merge", False):
+#                 # Merge the PR
+#                 merge_message = f"Auto-merged by instructor after review approval\n\n{decision.notes or ''}"
+#                 merge_result = github_service.merge_pull_request(
+#                     review.repo_full_name,
+#                     review.pr_number,
+#                     commit_message=merge_message,
+#                     merge_method="merge"  # or "squash" or "rebase"
+#                 )
+                
+#                 if merge_result["success"]:
+#                     # Post success comment
+#                     github_service.post_review_comment(
+#                         review.repo_full_name,
+#                         review.pr_number,
+#                         "✅ **PR has been automatically merged by instructor**",
+#                         review.commit_sha
+#                     )
+#             else:
+#                 # Cannot merge - post explanation
+#                 reason = "unknown reason"
+#                 if not pr_status.get("mergeable"):
+#                     reason = "merge conflicts"
+#                 elif pr_status.get("status_checks", {}).get("state") != "success":
+#                     reason = "status checks not passing"
+                
+#                 github_service.post_review_comment(
+#                     review.repo_full_name,
+#                     review.pr_number,
+#                     f"⚠️ **Auto-merge failed**: PR cannot be merged due to {reason}. Please resolve and merge manually.",
+#                     review.commit_sha
+#                 )
+#                 merge_result = {
+#                     "success": False,
+#                     "message": f"Cannot merge: {reason}"
+#                 }
     
 #     elif decision.decision == "reject":
 #         review.status = ReviewStatus.REJECTED
+#         merge_result = {"success": False, "message": "Review rejected"}
     
 #     else:
 #         raise HTTPException(status_code=400, detail="Invalid decision")
     
 #     review.instructor_notes = decision.notes
 #     review.reviewed_at = datetime.utcnow()
+    
+#     # Store merge result if auto-merge was attempted
+#     if decision.auto_merge and decision.decision == "approve":
+#         if not review.instructor_notes:
+#             review.instructor_notes = ""
+#         review.instructor_notes += f"\n\nAuto-merge result: {merge_result['message']}"
     
 #     db.commit()
 #     db.refresh(review)
@@ -246,3 +225,27 @@ def get_pr_merge_status(
 #         "approved": approved,
 #         "rejected": rejected
 #     }
+
+# @router.get("/reviews/{review_id}/pr-status")
+# def get_pr_merge_status(
+#     review_id: int,
+#     db: Session = Depends(get_db)
+# ):
+#     """Check if PR can be merged"""
+    
+#     review = db.query(PRReview).filter(PRReview.id == review_id).first()
+    
+#     if not review:
+#         raise HTTPException(status_code=404, detail="Review not found")
+    
+#     github_service = GitHubService(settings.github_token)
+#     pr_status = github_service.check_pr_status(
+#         review.repo_full_name,
+#         review.pr_number
+#     )
+    
+#     return pr_status
+
+
+
+
