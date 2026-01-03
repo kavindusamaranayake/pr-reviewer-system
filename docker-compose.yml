@@ -26,7 +26,7 @@ services:
       GITHUB_TOKEN: ${GITHUB_TOKEN}
       GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
       API_PORT: 8000
-      CORS_ORIGINS: http://35.154.86.118:3000,http://localhost:3000
+      CORS_ORIGINS: http://65.0.107.153:3000,http://localhost:3000
     ports:
       - "8000:8000"
     depends_on:
@@ -40,7 +40,7 @@ services:
     build: ./frontend
     container_name: pr-review-frontend
     environment:
-      VITE_API_URL: http://35.154.86.118:8000
+      VITE_API_URL: http://65.0.107.153:8000
     ports:
       - "3000:3000"
     depends_on:
