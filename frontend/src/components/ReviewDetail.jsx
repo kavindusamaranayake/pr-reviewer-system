@@ -4,7 +4,6 @@ import { reviewsAPI } from "../services/api";
 function ReviewDetail({ review, onClose }) {
   const [decision, setDecision] = useState("");
   const [notes, setNotes] = useState("");
-  const [autoMerge, setAutoMerge] = useState(false); // ← NEW
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
@@ -13,12 +12,7 @@ function ReviewDetail({ review, onClose }) {
     setError(null);
 
     try {
-      await reviewsAPI.makeDecision(
-        review.id,
-        action,
-        notes || null,
-        autoMerge // ← NEW: Pass auto-merge flag
-      );
+      await reviewsAPI.makeDecision(review.id, action, notes || null);
       onClose();
     } catch (err) {
       setError(`Failed to ${action} review`);
@@ -267,39 +261,13 @@ function ReviewDetail({ review, onClose }) {
               />
             </div>
 
-            {/* NEW: Auto-merge checkbox */}
-            <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <label className="flex items-start cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={autoMerge}
-                  onChange={(e) => setAutoMerge(e.target.checked)}
-                  className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                />
-                <div className="ml-3">
-                  <span className="text-sm font-medium text-gray-900">
-                    🚀 Auto-merge PR after posting review
-                  </span>
-                  <p className="text-xs text-gray-600 mt-1">
-                    If enabled, the PR will be automatically merged if all
-                    status checks pass. If merge conflicts exist or checks fail,
-                    it will post a comment explaining why.
-                  </p>
-                </div>
-              </label>
-            </div>
-
             <div className="flex gap-3">
               <button
                 onClick={() => handleSubmit("approve")}
                 disabled={submitting}
                 className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
-                {submitting
-                  ? "Processing..."
-                  : autoMerge
-                  ? "✓ Approve, Post & Merge"
-                  : "✓ Approve & Post to GitHub"}
+                {submitting ? "Processing..." : "✓ Approve & Post to GitHub"}
               </button>
               <button
                 onClick={() => handleSubmit("reject")}
@@ -319,13 +287,12 @@ function ReviewDetail({ review, onClose }) {
               Instructor Notes
             </h4>
             <div className="bg-gray-50 rounded-lg p-4">
-              <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                {review.instructor_notes}
-              </p>
+              <p className="text-sm text-gray-700">{review.instructor_notes}</p>
             </div>
           </div>
         )}
       </div>
+      //{" "}
     </div>
   );
 }
@@ -338,6 +305,7 @@ export default ReviewDetail;
 // function ReviewDetail({ review, onClose }) {
 //   const [decision, setDecision] = useState("");
 //   const [notes, setNotes] = useState("");
+//   const [autoMerge, setAutoMerge] = useState(false); // ← NEW
 //   const [submitting, setSubmitting] = useState(false);
 //   const [error, setError] = useState(null);
 
@@ -346,7 +314,12 @@ export default ReviewDetail;
 //     setError(null);
 
 //     try {
-//       await reviewsAPI.makeDecision(review.id, action, notes || null);
+//       await reviewsAPI.makeDecision(
+//         review.id,
+//         action,
+//         notes || null,
+//         autoMerge // ← NEW: Pass auto-merge flag
+//       );
 //       onClose();
 //     } catch (err) {
 //       setError(`Failed to ${action} review`);
@@ -595,13 +568,39 @@ export default ReviewDetail;
 //               />
 //             </div>
 
+//             {/* NEW: Auto-merge checkbox */}
+//             <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+//               <label className="flex items-start cursor-pointer">
+//                 <input
+//                   type="checkbox"
+//                   checked={autoMerge}
+//                   onChange={(e) => setAutoMerge(e.target.checked)}
+//                   className="mt-1 h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+//                 />
+//                 <div className="ml-3">
+//                   <span className="text-sm font-medium text-gray-900">
+//                     🚀 Auto-merge PR after posting review
+//                   </span>
+//                   <p className="text-xs text-gray-600 mt-1">
+//                     If enabled, the PR will be automatically merged if all
+//                     status checks pass. If merge conflicts exist or checks fail,
+//                     it will post a comment explaining why.
+//                   </p>
+//                 </div>
+//               </label>
+//             </div>
+
 //             <div className="flex gap-3">
 //               <button
 //                 onClick={() => handleSubmit("approve")}
 //                 disabled={submitting}
 //                 className="flex-1 bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
 //               >
-//                 {submitting ? "Processing..." : "✓ Approve & Post to GitHub"}
+//                 {submitting
+//                   ? "Processing..."
+//                   : autoMerge
+//                   ? "✓ Approve, Post & Merge"
+//                   : "✓ Approve & Post to GitHub"}
 //               </button>
 //               <button
 //                 onClick={() => handleSubmit("reject")}
@@ -621,12 +620,13 @@ export default ReviewDetail;
 //               Instructor Notes
 //             </h4>
 //             <div className="bg-gray-50 rounded-lg p-4">
-//               <p className="text-sm text-gray-700">{review.instructor_notes}</p>
+//               <p className="text-sm text-gray-700 whitespace-pre-wrap">
+//                 {review.instructor_notes}
+//               </p>
 //             </div>
 //           </div>
 //         )}
 //       </div>
-//       //{" "}
 //     </div>
 //   );
 // }

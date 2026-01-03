@@ -41,7 +41,7 @@ class PRReviewResponse(BaseModel):
 class InstructorDecision(BaseModel):
     decision: str  # "approve" or "reject"
     notes: Optional[str] = None
-    auto_merge: Optional[bool] = False
+    
 
 class BranchRuleCreate(BaseModel):
     branch_pattern: str
