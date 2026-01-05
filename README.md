@@ -13,7 +13,7 @@ PR-Review-System
 
 **An intelligent, automated code review system for GitHub Pull Requests with instructor approval workflow**
 
-[Features](#-features) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Architecture](#-architecture)
+[Features](#-features) • [Quick Start](#-quick-start) • [Architecture](#-architecture)
 
 </div>
 
@@ -23,20 +23,16 @@ PR-Review-System
 
 - [Overview](#-overview)
 - [Features](#-features)
-- [Demo](#-demo)
 - [Tech Stack](#-tech-stack)
 - [Architecture](#-architecture)
 - [Prerequisites](#-prerequisites)
 - [Quick Start](#-quick-start)
-- [Configuration](#-configuration)
 - [Usage](#-usage)
 - [API Documentation](#-api-documentation)
 - [Branch Rules](#-branch-rules)
 - [Project Structure](#-project-structure)
 - [Deployment](#-deployment)
 - [Troubleshooting](#-troubleshooting)
-- [Contributing](#-contributing)
-- [License](#-license)
 
 ---
 
